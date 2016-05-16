@@ -1,0 +1,156 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.sis.camerademo.SettingsActivity" >
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="100"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Camera:" />
+
+            <Spinner
+                android:id="@+id/cameraId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Frame:" />
+
+            <Spinner
+                android:id="@+id/FrameSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Separator -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/darker_gray" 
+                android:layout_marginBottom="16dp">
+            </LinearLayout>
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stream:" />
+
+            <Spinner
+                android:id="@+id/streamFormat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Server:" />
+
+            <Spinner
+                android:id="@+id/serverName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            
+            
+            
+            
+            <!-- Separator -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/darker_gray" 
+                android:layout_marginBottom="16dp">
+            </LinearLayout>
+            
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Video:" />
+            <Spinner
+                android:id="@+id/videoCodecName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quality:" />
+            <Spinner
+                android:id="@+id/videoQuality"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOP Size:" />
+            <Spinner
+                android:id="@+id/videoGopSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BitRate [kbits/sec]:" />
+            <Spinner
+                android:id="@+id/videoButrate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Separator -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/darker_gray" 
+                android:paddingBottom="8dp">
+            </LinearLayout>
+            
+            </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="10"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/Cancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="50"
+            android:text="Cancel" />
+
+        <Button
+            android:id="@+id/Ok"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="50"
+            android:text="OK" />
+    </LinearLayout>
+
+</LinearLayout>
