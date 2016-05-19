@@ -46,8 +46,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:background="@android:color/darker_gray" 
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:background="@android:color/darker_gray" >
             </LinearLayout>
 
 
@@ -60,43 +60,42 @@
                 android:id="@+id/streamFormat"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-            
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Server:" />
 
-            <Spinner
+
+            <com.sis.camerademo.ComboBox
                 android:id="@+id/serverName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-            
-            
-            
             
             <!-- Separator -->
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:background="@android:color/darker_gray" 
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:background="@android:color/darker_gray" >
             </LinearLayout>
-            
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Video:" />
+
             <Spinner
                 android:id="@+id/videoCodecName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-            
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Quality:" />
+
             <Spinner
                 android:id="@+id/videoQuality"
                 android:layout_width="match_parent"
@@ -106,6 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="GOP Size:" />
+
             <Spinner
                 android:id="@+id/videoGopSize"
                 android:layout_width="match_parent"
@@ -115,6 +115,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="BitRate [kbits/sec]:" />
+
             <Spinner
                 android:id="@+id/videoButrate"
                 android:layout_width="match_parent"
@@ -125,11 +126,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:background="@android:color/darker_gray" 
-                android:paddingBottom="8dp">
+                android:background="@android:color/darker_gray"
+                android:paddingBottom="8dp" >
             </LinearLayout>
-            
-            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
 
     <LinearLayout

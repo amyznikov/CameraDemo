@@ -1,10 +1,12 @@
 package com.sis.camerademo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera;
 import android.os.Bundle;
@@ -20,12 +22,14 @@ import android.widget.Spinner;
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends Activity {
 
-  private static int numcams = 0;
-  private static Camera.Parameters[/*numcams*/] cameraParameters = null; 
+  private static boolean initialized = false; 
+  
+  public static int numcams = 0;
+  public static Camera.Parameters[/*numcams*/] cameraParameters = null; 
 
   
   private Spinner cameraSpinner = null;
-  private static CameraInfo [] cameraInfo = null;
+  public static CameraInfo [] cameraInfo = null;
   private static String[] cameraInfoStrings = null;
   
   
@@ -34,12 +38,15 @@ public class SettingsActivity extends Activity {
   private static int[] selectedFrameSizeIndexes = null;
   
   
-  private Spinner serverNameSpinner = null;
-  private static final String[] serverNames = {
+  private ComboBox serverNameCombo = null;
+  private static ArrayList<String > serverNames = new ArrayList<String>();
+  private static final String[] defaultServerNames = {
       "http://192.168.0.105:8082/test",
       "http://crkdev1.special-is.com:8082/test",
   };
-  private static int selectedServerNameIndex = 1;
+  
+  
+  
   
 
   private Spinner streamFormatsSpinner = null;
@@ -158,7 +165,6 @@ public class SettingsActivity extends Activity {
     
     super.onCreate(savedInstanceState);
     
-
     if (!getCameraInfo()) {
       OnError();
       this.finish();
@@ -201,7 +207,7 @@ public class SettingsActivity extends Activity {
     
     
     frameSizesSpinner = (Spinner) findViewById(R.id.FrameSize); 
-    serverNameSpinner = (Spinner) findViewById(R.id.serverName);
+    serverNameCombo = (ComboBox) findViewById(R.id.serverName);
     streamFormatsSpinner = (Spinner) findViewById(R.id.streamFormat);
     videoCodecNamesSpinner = (Spinner) findViewById(R.id.videoCodecName);
     videoQualitySpinner = (Spinner) findViewById(R.id.videoQuality);
@@ -228,7 +234,13 @@ public class SettingsActivity extends Activity {
         SettingsActivity.this.finish();
       }
     });
-    
+
+
+    if ( !initialized ) {
+      initialized = true;
+      readPrefs();
+    }
+   
     updateControls();
   }
 
@@ -240,7 +252,7 @@ public class SettingsActivity extends Activity {
   }
   
   private void OnAccepteted() {
-    saveControls();
+    savePrefs();
     if (statusListener_ != null) {
       statusListener_.OnAccepteted();
     }
@@ -300,14 +312,58 @@ public class SettingsActivity extends Activity {
       }
     }
     catch (Exception ex ) {
-      MsgBox.show("ERROR", "%s", ex.getMessage());
+      ex.printStackTrace();
+      toast.show("ERROR", "%s", ex.getMessage());
       return false;
     }
     
     return true;
   }
 
-  private void saveControls() {
+  
+  private void readPrefs() {
+
+    SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        
+    options.cameraId = prefs.getInt("cameraId", options.cameraId);
+    selectedStreamFormatIndex = prefs.getInt("selectedStreamFormatIndex", selectedStreamFormatIndex);
+    selectedVideoCodecIndex = prefs.getInt("selectedVideoCodecIndex", selectedVideoCodecIndex);
+    selectedVideoQualityIndex = prefs.getInt("selectedVideoQualityIndex", selectedVideoQualityIndex);
+    selectedVideoGopSizeIndex = prefs.getInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
+    selectedVideoBitrateIndex = prefs.getInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
+
+    for (int i = 0; i < numcams; ++i) {
+      selectedFrameSizeIndexes[i] = prefs.getInt(String.format("FrameSizeIndex%d", i), selectedFrameSizeIndexes[i]);
+    }
+    
+
+    //////
+
+    if ((options.serverName = prefs.getString("Server", null)) == null) {
+      options.serverName = defaultServerNames[0];
+    }    
+    
+
+    serverNames.clear();   
+
+    for ( int i = 0; i < 10 ; ++i ) {
+      String serverName = prefs.getString(String.format("Server%d", i), null);
+      if ( serverName == null ) {
+        break;
+      }
+      serverNames.add(serverName);
+    }
+
+    if ( serverNames.size() < 1 ) {
+      for ( int i= 0; i < defaultServerNames.length ; ++i ) {
+        serverNames.add(defaultServerNames[i]);
+      }
+    }    
+    
+    //////
+  }
+  
+  private void savePrefs() {
     
     options.cameraId = cameraSpinner.getSelectedItemPosition();
 
@@ -318,13 +374,46 @@ public class SettingsActivity extends Activity {
     options.frameHeigt = frameSize.height;    
 
     
-    options.serverName = serverNames[selectedServerNameIndex = serverNameSpinner.getSelectedItemPosition()];
+
     options.streamFormat = streamFormats[selectedStreamFormatIndex = streamFormatsSpinner.getSelectedItemPosition()];
     options.videoCodec = videoCodecNames[selectedVideoCodecIndex = videoCodecNamesSpinner.getSelectedItemPosition()];
     options.videoQuality = str2num(videoQualityValues[selectedVideoQualityIndex = videoQualitySpinner.getSelectedItemPosition()]);
     options.videoGopSize = str2num(videoGopSizes[selectedVideoGopSizeIndex = videoGopSizeSpinner.getSelectedItemPosition()]);
     options.videoBitRate = str2num(videoGopSizes[selectedVideoBitrateIndex = videoBitrateSpinner.getSelectedItemPosition()]);
+    
+    
+    SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE).edit();
+    
+    prefs.putInt("cameraId", options.cameraId);
+    prefs.putInt("selectedStreamFormatIndex", selectedStreamFormatIndex);
+    prefs.putInt("selectedVideoCodecIndex", selectedVideoCodecIndex);
+    prefs.putInt("selectedVideoQualityIndex", selectedVideoQualityIndex);
+    prefs.putInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
+    prefs.putInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
+
+    for (int i = 0; i < numcams; ++i) {
+      prefs.putInt(String.format("FrameSizeIndex%d", i), selectedFrameSizeIndexes[i]);
+    }
+    
+    if ((options.serverName = serverNameCombo.getText()) == null || options.serverName.isEmpty() ) {
+      options.serverName = defaultServerNames[0];
+    }
+    prefs.putString("Server", options.serverName);
+
+    
+    if ( !serverNames.contains(options.serverName) ) {
+      serverNames.add(0, options.serverName);
+    }
+
+    for ( int i = 0, n = serverNames.size() > 10 ? 10 : serverNames.size(); i < n; ++i ) {
+      prefs.putString(String.format("Server%d", i), serverNames.get(i));
+    }
+   
+    prefs.commit();    
   }
+  
+  
+  
   
   
   
@@ -359,9 +448,8 @@ public class SettingsActivity extends Activity {
       frameSizesSpinner.setSelection(selectedFrameSizeIndexes[options.cameraId]);      
     }
     
-
-    serverNameSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, serverNames));
-    serverNameSpinner.setSelection(selectedServerNameIndex);
+    serverNameCombo.setItems(serverNames);
+    serverNameCombo.setText(options.serverName);
 
     streamFormatsSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, streamFormats));
     streamFormatsSpinner.setSelection(selectedStreamFormatIndex);
