@@ -1,14 +1,13 @@
 package com.sis.camerademo;
 
+import com.sis.ffplay.CameraPreview;
+
 public class StreamOptions {
-  
   public int cameraId;
   public int frameWidth, frameHeigt;
-  public String streamFormat;
-  public String videoCodec;
-  public int videoQuality;
-  public int videoGopSize;
-  public int videoBitRate;
- 
-  public String serverName;
+  public CameraPreview.StreamOptions sopt;
+
+  public StreamOptions() {
+    sopt = new CameraPreview.StreamOptions();
+  }
 }

@@ -21,25 +21,19 @@
             android:layout_weight="100"
             android:orientation="vertical" >
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Camera:" />
-
-            <Spinner
+            <com.sis.camerademo.SpinBox
                 android:id="@+id/cameraId"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Frame:" />
+                android:hint="Camera:"
+                android:orientation="horizontal" />
 
-            <Spinner
-                android:id="@+id/FrameSize"
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/FrameSizes"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:hint="Frame Size:"
+                android:orientation="horizontal" />
 
             <!-- Separator -->
 
@@ -49,29 +43,21 @@
                 android:layout_marginBottom="16dp"
                 android:background="@android:color/darker_gray" >
             </LinearLayout>
-
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Stream:" />
-
-            <Spinner
-                android:id="@+id/streamFormat"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Server:" />
-
 
             <com.sis.camerademo.ComboBox
                 android:id="@+id/serverName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
+                android:layout_height="wrap_content"
+                android:hint="Stream:"
+                android:orientation="vertical" />
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/streamFormat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Format:"
+                android:orientation="horizontal" />
+
             <!-- Separator -->
 
             <LinearLayout
@@ -81,45 +67,77 @@
                 android:background="@android:color/darker_gray" >
             </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Video:" />
-
-            <Spinner
+            <com.sis.camerademo.SpinBox
                 android:id="@+id/videoCodecName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Quality:" />
+                android:hint="Video:"
+                android:orientation="horizontal" />
 
-            <Spinner
+            <com.sis.camerademo.SpinBox
                 android:id="@+id/videoQuality"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GOP Size:" />
+                android:hint="Quality:"
+                android:orientation="horizontal" />
 
-            <Spinner
+            <com.sis.camerademo.SpinBox
                 android:id="@+id/videoGopSize"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="BitRate [kbits/sec]:" />
+                android:orientation="horizontal"
+                android:hint="GOP Size:" />
 
-            <Spinner
-                android:id="@+id/videoButrate"
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/videoBitrate"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:hint="Bitrate:"
+                android:orientation="horizontal" />
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/videoBufs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Buffers:"
+                android:orientation="horizontal" />
+
+            <!-- Separator -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginBottom="16dp"
+                android:background="@android:color/darker_gray" >
+            </LinearLayout>
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/audioCodecName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Audio:"
+                android:orientation="horizontal" />
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/audioQuality"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Quality:"
+                android:orientation="horizontal" />
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/audioBitrate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Bitrate:"
+                android:orientation="horizontal" />
+
+            <com.sis.camerademo.SpinBox
+                android:id="@+id/audioBufs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Buffers:"
+                android:orientation="horizontal" />
 
             <!-- Separator -->
 
@@ -129,6 +147,21 @@
                 android:background="@android:color/darker_gray"
                 android:paddingBottom="8dp" >
             </LinearLayout>
+
+            
+            <CheckBox
+                android:id="@+id/expertMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Expert settings" />
+
+            <EditText
+                android:id="@+id/ffoptsEditBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="libavcodec options"
+                android:scrollHorizontally="false" />
         </LinearLayout>
     </ScrollView>
 

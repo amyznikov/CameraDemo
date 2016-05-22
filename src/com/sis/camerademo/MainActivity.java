@@ -230,16 +230,7 @@ public class MainActivity extends Activity {
       break;
 
     case CameraPreview.STATE_PREVIEW: {
-      CameraPreview.StreamOptions opts = new CameraPreview.StreamOptions();
-      
-      opts.format = SettingsActivity.options.streamFormat;
-      opts.codec = SettingsActivity.options.videoCodec;
-      opts.quality = SettingsActivity.options.videoQuality;
-      opts.gopsize = SettingsActivity.options.videoGopSize;
-      opts.bitrate = SettingsActivity.options.videoBitRate;
-      opts.ffopts = null;
-      
-      cameraPreview.startStream(SettingsActivity.options.serverName, opts);
+      cameraPreview.startStream(SettingsActivity.options.sopt);
     }
       break;
       
@@ -290,13 +281,13 @@ public class MainActivity extends Activity {
   private void refreshStreamStats()
   {
     if ( cameraPreview.getStreamStatus(stats) ) {
-      setText(connectionStateView, "STATUS: %s", CameraPreview.getStreamStatusString(stats.state));
+      setText(connectionStateView, "%s", CameraPreview.getStreamStatusString(stats.state));
       setText(framesReadView,      "Frames read  : %9d", stats.framesRead);
       setText(framesSentView,      "Frames sent  : %9d", stats.framesSent);
       setText(bytesReadView,       "Bytes  read  : %9d", stats.bytesRead);
       setText(bytesSentView,       "Bytes  sent  : %9d", stats.bytesSent);
-      setText(inputFpsView,        "Input  fps   : %3d", stats.inputFps);
-      setText(outputFpsView,       "Output fps   : %3d", stats.outputFps);
+      setText(inputFpsView,        "Input  fps   : %f", stats.inputFps);
+      setText(outputFpsView,       "Output fps   : %f", stats.outputFps);
       setText(inputBitrateView, "Input  Bitrate  : %s", br2str(stats.inputBitrate));
       setText(outputBitrateView, "Output Bitrate : %s", br2str(stats.outputBitrate));
     }

@@ -3,135 +3,100 @@ package com.sis.camerademo;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sis.ffplay.CameraPreview;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
-@SuppressWarnings("deprecation")
 public class SettingsActivity extends Activity {
 
+  private static final String TAG = "camerademo/SettingsActivity"; 
+  
   private static boolean initialized = false; 
   
   public static int numcams = 0;
-  public static Camera.Parameters[/*numcams*/] cameraParameters = null; 
-
-  
-  private Spinner cameraSpinner = null;
+  public static Camera.Parameters[] cameraParameters = null; 
   public static CameraInfo [] cameraInfo = null;
+
+  private SpinBox cameraSpinner = null;
   private static String[] cameraInfoStrings = null;
   
   
-  
-  private Spinner frameSizesSpinner = null;
+  private SpinBox frameSizesSpinner = null;
   private static int[] selectedFrameSizeIndexes = null;
+  private static String[][] supportedFrameSizeStrings = null;
+  private static int [] bestFramesizeIndex = null;
   
   
-  private ComboBox serverNameCombo = null;
+  private ComboBox serverNameSpinner = null;
   private static ArrayList<String > serverNames = new ArrayList<String>();
   private static final String[] defaultServerNames = {
-      "http://192.168.0.105:8082/test",
       "http://crkdev1.special-is.com:8082/test",
+      "http://192.168.0.105:8082/test",
   };
   
   
+  private SpinBox streamFormatsSpinner = null;
+  private static final String[] streamFormats = CameraPreview.getSupportedStreamFormats();
   
-  
+  private SpinBox videoCodecSpinner = null;
+  private static final String[] videoCodecNames = CameraPreview.getSupportedVideoCodecs();
 
-  private Spinner streamFormatsSpinner = null;
-  private static final String[] streamFormats = {
-      "mjpeg",
-      "matroska",
-      "ffm",
-      "avi",
-      "flv",
-      "asf",
-  };
-  private static int selectedStreamFormatIndex = 0;
-  
-  
-  
-  private Spinner videoCodecNamesSpinner = null;
-  private static final String[] videoCodecNames = {
-      "mjpeg",
-      "ffv1",
-      "libx264",
-      "h263a",
-  };
-  private static int selectedVideoCodecIndex = 0;
+  private SpinBox audioCodecSpinner = null;
+  private static final String[] audioCodecNames = CameraPreview.getSupportedAudioCodecs();
 
   
-  private Spinner videoQualitySpinner = null;
-  private static final String[] videoQualityValues = {
-      "10%",
-      "20%",
-      "30%",
-      "40%",
-      "50%",
-      "60%",
-      "70%",
-      "80%",
-      "90%",
-     "100%",
+  private SpinBox videoQualitySpinner = null;
+  private SpinBox audioQualitySpinner = null;
+  
+  private SpinBox videoBitrateSpinner = null;
+  private SpinBox audioBitrateSpinner = null;
+  
+  private SpinBox videoBufsSpinner = null;
+  private static final String videoBufCounts[] = {
+      "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15"
   };
-  private static int selectedVideoQualityIndex = 4;
-
-
-  private Spinner videoBitrateSpinner = null;
-  private static final String[] videoBitrateValues = {
-      "2K",
-      "5K",
-      "10K",
-      "20K",
-      "50K",
-      "100K",
-      "128K",
-      "160K",
-      "200K",
-      "256K",
-      "300K",
-      "400K",
-      "500K",
-      "600K",
-      "700K",
-      "800K",
-      "900K",
-       "1M",
+  
+  
+  private SpinBox audioBufsSpinner = null;
+  private static final String audioBufCounts[] = {
+      "1", "2", "3", "4", "5", "10", "15", "20", "30", "50", "100", "150", "200", "250", "300", "350" 
   };
-  private static int selectedVideoBitrateIndex = 6;
-
-  
-  private Spinner videoGopSizeSpinner = null;
-  private static final String[] videoGopSizes = {
-      "1",
-      "3",
-      "5",
-      "10",
-      "15",
-      "20",
-      "25",
-      "30",
-      "40",
-      "50",
-  };
-  private static int selectedVideoGopSizeIndex = 3;
   
   
   
+  private SpinBox videoGopSizeSpinner = null;
+  
+  private CheckBox expertModeCheckBox = null;
+  private EditText ffoptsEditBox = null;
+  private static String ffOptsBackup = null;
   
   private Button cancelButton = null;
   private Button okButton = null;
+
+  public static StreamOptions options = new StreamOptions();
+  
+  
   
 
   public static interface StatusListener {
@@ -141,7 +106,6 @@ public class SettingsActivity extends Activity {
   }
   
   public static StatusListener statusListener_;
-  public static StreamOptions options = new StreamOptions();
    
   
   
@@ -182,15 +146,17 @@ public class SettingsActivity extends Activity {
       options.cameraId = 0;
     }
     
+    if ( !initialized ) {
+      readPrefs();
+      initialized = true;
+    }
+
     setContentView(R.layout.activity_settings);
     
     
-    
-    
-    cameraSpinner = (Spinner) findViewById(R.id.cameraId);
-    cameraSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, cameraInfoStrings));
+    cameraSpinner = (SpinBox) findViewById(R.id.cameraId);
+    cameraSpinner.setItems(cameraInfoStrings);
     cameraSpinner.setSelection(options.cameraId);
-
     cameraSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -204,15 +170,86 @@ public class SettingsActivity extends Activity {
       }
     });
     
+
+    
+    frameSizesSpinner = (SpinBox) findViewById(R.id.FrameSizes); 
+
+    
+    serverNameSpinner = (ComboBox) findViewById(R.id.serverName);
+    serverNameSpinner.setItems(serverNames);
+    serverNameSpinner.setText(options.sopt.server);
+
+    
+    streamFormatsSpinner = (SpinBox) findViewById(R.id.streamFormat);
+    streamFormatsSpinner.setItems(streamFormats);
+    streamFormatsSpinner.setSelection(guessIndexOf(options.sopt.format, streamFormats));
+
+    
+    videoCodecSpinner = (SpinBox) findViewById(R.id.videoCodecName);
+    videoCodecSpinner.setItems(videoCodecNames);
+    videoCodecSpinner.setSelection(guessIndexOf(options.sopt.vCodecName, videoCodecNames));
+    videoCodecSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+        options.sopt.vCodecName = videoCodecSpinner.getSelectedItemText();
+        updateControls();
+      }
+      @Override
+      public void onNothingSelected(AdapterView<?> arg0) {
+      }
+    });
     
     
-    frameSizesSpinner = (Spinner) findViewById(R.id.FrameSize); 
-    serverNameCombo = (ComboBox) findViewById(R.id.serverName);
-    streamFormatsSpinner = (Spinner) findViewById(R.id.streamFormat);
-    videoCodecNamesSpinner = (Spinner) findViewById(R.id.videoCodecName);
-    videoQualitySpinner = (Spinner) findViewById(R.id.videoQuality);
-    videoGopSizeSpinner = (Spinner) findViewById(R.id.videoGopSize);
-    videoBitrateSpinner = (Spinner) findViewById(R.id.videoButrate);
+    
+    audioCodecSpinner = (SpinBox) findViewById(R.id.audioCodecName);
+    audioCodecSpinner.setItems(audioCodecNames);
+    audioCodecSpinner.setSelection(guessIndexOf(options.sopt.aCodecName, audioCodecNames));
+    audioCodecSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+        options.sopt.aCodecName = audioCodecSpinner.getSelectedItemText();
+        updateControls();
+      }
+      @Override
+      public void onNothingSelected(AdapterView<?> arg0) {
+      }
+    });
+    
+    
+    videoQualitySpinner = (SpinBox) findViewById(R.id.videoQuality);
+    videoBitrateSpinner = (SpinBox) findViewById(R.id.videoBitrate);
+    videoGopSizeSpinner = (SpinBox) findViewById(R.id.videoGopSize);
+
+    videoBufsSpinner = (SpinBox) findViewById(R.id.videoBufs);
+    videoBufsSpinner.setItems(videoBufCounts);
+    videoBufsSpinner.setSelection(guessIndexOf(String.format("%d",options.sopt.vBufferSize), videoBufCounts));
+    
+    
+    audioQualitySpinner = (SpinBox) findViewById(R.id.audioQuality);
+    audioBitrateSpinner = (SpinBox) findViewById(R.id.audioBitrate);
+
+    audioBufsSpinner = (SpinBox) findViewById(R.id.audioBufs);
+    audioBufsSpinner.setItems(audioBufCounts);
+    audioBufsSpinner.setSelection(guessIndexOf(String.format("%d",options.sopt.aBufferSize), audioBufCounts));
+    
+    expertModeCheckBox = (CheckBox) findViewById(R.id.expertMode);
+    expertModeCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        ffoptsEditBox.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+      }
+    });
+    
+    
+    ffoptsEditBox = (EditText)findViewById(R.id.ffoptsEditBox);
+    ffoptsEditBox.setText(ffOptsBackup);
+    if ( expertModeCheckBox.isChecked()) {
+      ffoptsEditBox.setVisibility(View.VISIBLE);
+    }
+    else {
+      ffoptsEditBox.setVisibility(View.GONE);
+    }
+
     
     
     
@@ -225,9 +262,10 @@ public class SettingsActivity extends Activity {
       }
     });
  
+
+    
     okButton = (Button) findViewById(R.id.Ok);
     okButton.setOnClickListener(new OnClickListener() {
-
       @Override
       public void onClick(View v) {
         OnAccepteted();
@@ -235,12 +273,10 @@ public class SettingsActivity extends Activity {
       }
     });
 
+    
+    
 
-    if ( !initialized ) {
-      initialized = true;
-      readPrefs();
-    }
-   
+    
     updateControls();
   }
 
@@ -286,14 +322,26 @@ public class SettingsActivity extends Activity {
         cameraParameters = new Camera.Parameters[numcams];
       }
       
+      if (supportedFrameSizeStrings == null) {
+        supportedFrameSizeStrings = new String[numcams][];
+      }
+      
+      if ( bestFramesizeIndex == null ) {
+        bestFramesizeIndex = new int[numcams];
+        for (int i = 0; i < numcams; ++i) {
+          bestFramesizeIndex[i] = -1;
+        }
+      }
+      
       if ( selectedFrameSizeIndexes == null ) {
         selectedFrameSizeIndexes = new int [numcams];
+        for (int i = 0; i < numcams; ++i) {
+          selectedFrameSizeIndexes[i] = -1;
+        }
       }
       
       for (int i = 0; i < numcams; ++i) {
 
-        selectedFrameSizeIndexes[i] = -1;
-        
         if ( cameraInfo[i] == null ) {
           Camera.getCameraInfo(i, cameraInfo[i] = new CameraInfo());
         }
@@ -308,6 +356,29 @@ public class SettingsActivity extends Activity {
             cameraParameters[i] = c.getParameters();
             c.release();
           }
+        }
+        
+        if ( supportedFrameSizeStrings[i] == null || bestFramesizeIndex[i] == -1 ) {
+          
+          int S = 640 * 480;
+          int ds, bestDS = Integer.MAX_VALUE;
+          int bestIndex = 0;
+          
+          List<Camera.Size> supportedFrameSizes = cameraParameters[options.cameraId].getSupportedPreviewSizes();
+          
+          supportedFrameSizeStrings[i] = new String[supportedFrameSizes.size()];
+          
+          for (int j = 0, n = supportedFrameSizes.size(); j < n; ++j) {
+
+            Camera.Size size = supportedFrameSizes.get(j);
+            supportedFrameSizeStrings[i][j] = String.format("%dx%d", size.width, size.height);
+
+            if ((ds = Math.abs(size.width * size.height - S)) < bestDS) {
+              bestDS = ds;
+              bestIndex = j;
+            }
+          }
+          bestFramesizeIndex[i] = bestIndex;
         }
       }
     }
@@ -326,28 +397,44 @@ public class SettingsActivity extends Activity {
     SharedPreferences prefs = getPreferences(MODE_PRIVATE);
         
     options.cameraId = prefs.getInt("cameraId", options.cameraId);
-    selectedStreamFormatIndex = prefs.getInt("selectedStreamFormatIndex", selectedStreamFormatIndex);
-    selectedVideoCodecIndex = prefs.getInt("selectedVideoCodecIndex", selectedVideoCodecIndex);
-    selectedVideoQualityIndex = prefs.getInt("selectedVideoQualityIndex", selectedVideoQualityIndex);
-    selectedVideoGopSizeIndex = prefs.getInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
-    selectedVideoBitrateIndex = prefs.getInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
-
-    for (int i = 0; i < numcams; ++i) {
-      selectedFrameSizeIndexes[i] = prefs.getInt(String.format("FrameSizeIndex%d", i), selectedFrameSizeIndexes[i]);
+    
+    if ((options.sopt.server = prefs.getString("server", options.sopt.server)) == null) {
+      options.sopt.server = defaultServerNames[0];
     }
     
+    if ((options.sopt.format = prefs.getString("format", options.sopt.format)) == null) {
+      options.sopt.format = streamFormats[0];
+    }
 
-    //////
+    if ((options.sopt.vCodecName = prefs.getString("VideoCodec", options.sopt.vCodecName)) == null) {
+      options.sopt.vCodecName = videoCodecNames[0];
+    }
 
-    if ((options.serverName = prefs.getString("Server", null)) == null) {
-      options.serverName = defaultServerNames[0];
-    }    
+    if ((options.sopt.aCodecName = prefs.getString("AudioCodec", options.sopt.aCodecName)) == null) {
+      options.sopt.aCodecName = audioCodecNames[0];
+    }        
     
-
+    if ((options.sopt.vBufferSize = prefs.getInt("videoBufs", -1)) == -1) {
+      options.sopt.vBufferSize = 3;
+    }
+    
+    if ((options.sopt.aBufferSize = prefs.getInt("audioBufs", -1)) == -1) {
+      options.sopt.aBufferSize = 150;
+    }
+    
+    options.sopt.vQuality = prefs.getInt("VideoQuality", options.sopt.vQuality);
+    options.sopt.aQuality = prefs.getInt("AudioQuality", options.sopt.aQuality);
+    options.sopt.vBitRate = prefs.getInt("VideoBitrate", options.sopt.vBitRate);
+    options.sopt.aBitRate = prefs.getInt("AudioBitrate", options.sopt.aBitRate);
+    options.sopt.vBufferSize = prefs.getInt("VideoBufs", options.sopt.vBufferSize);
+    options.sopt.aBufferSize = prefs.getInt("AudioBufs", options.sopt.aBufferSize);
+    options.sopt.vGopSize = prefs.getInt("GopSize", options.sopt.vGopSize);
+    ffOptsBackup = prefs.getString("ffopts", options.sopt.ffopts);
+    
     serverNames.clear();   
 
     for ( int i = 0; i < 10 ; ++i ) {
-      String serverName = prefs.getString(String.format("Server%d", i), null);
+      String serverName = prefs.getString(String.format("server%d", i), null);
       if ( serverName == null ) {
         break;
       }
@@ -358,57 +445,90 @@ public class SettingsActivity extends Activity {
       for ( int i= 0; i < defaultServerNames.length ; ++i ) {
         serverNames.add(defaultServerNames[i]);
       }
-    }    
+    }
     
-    //////
+    for (int i = 0; i < numcams; ++i) {
+      selectedFrameSizeIndexes[i] = prefs.getInt(String.format("FrameSizeIndex%d", i), selectedFrameSizeIndexes[i]);
+    }
   }
   
+  
+  
   private void savePrefs() {
-    
-    options.cameraId = cameraSpinner.getSelectedItemPosition();
 
+    String serverName = serverNameSpinner.getText().toString();
+    if (serverName == null || options.sopt.server.isEmpty()) {
+      toast.show("No Server Name Specified");
+      return;
+    }
+
+    SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE).edit();
+    
+
+    options.cameraId = cameraSpinner.getSelectedItemPosition();
+    prefs.putInt("cameraId", options.cameraId);
+
+    
     selectedFrameSizeIndexes[options.cameraId] = frameSizesSpinner.getSelectedItemPosition();
+    prefs.putInt(String.format("FrameSizeIndex%d", options.cameraId), selectedFrameSizeIndexes[options.cameraId]);
+
+    
     Camera.Size frameSize = cameraParameters[options.cameraId].getSupportedPreviewSizes()
         .get(selectedFrameSizeIndexes[options.cameraId]);
     options.frameWidth = frameSize.width;
     options.frameHeigt = frameSize.height;    
 
-    
 
-    options.streamFormat = streamFormats[selectedStreamFormatIndex = streamFormatsSpinner.getSelectedItemPosition()];
-    options.videoCodec = videoCodecNames[selectedVideoCodecIndex = videoCodecNamesSpinner.getSelectedItemPosition()];
-    options.videoQuality = str2num(videoQualityValues[selectedVideoQualityIndex = videoQualitySpinner.getSelectedItemPosition()]);
-    options.videoGopSize = str2num(videoGopSizes[selectedVideoGopSizeIndex = videoGopSizeSpinner.getSelectedItemPosition()]);
-    options.videoBitRate = str2num(videoGopSizes[selectedVideoBitrateIndex = videoBitrateSpinner.getSelectedItemPosition()]);
     
-    
-    SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE).edit();
-    
-    prefs.putInt("cameraId", options.cameraId);
-    prefs.putInt("selectedStreamFormatIndex", selectedStreamFormatIndex);
-    prefs.putInt("selectedVideoCodecIndex", selectedVideoCodecIndex);
-    prefs.putInt("selectedVideoQualityIndex", selectedVideoQualityIndex);
-    prefs.putInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
-    prefs.putInt("selectedVideoGopSizeIndex", selectedVideoGopSizeIndex);
-
-    for (int i = 0; i < numcams; ++i) {
-      prefs.putInt(String.format("FrameSizeIndex%d", i), selectedFrameSizeIndexes[i]);
+    prefs.putString("server", options.sopt.server = serverName);
+    if (!serverNames.contains(serverName)) {
+      serverNames.add(0, serverName);
     }
-    
-    if ((options.serverName = serverNameCombo.getText()) == null || options.serverName.isEmpty() ) {
-      options.serverName = defaultServerNames[0];
-    }
-    prefs.putString("Server", options.serverName);
-
-    
-    if ( !serverNames.contains(options.serverName) ) {
-      serverNames.add(0, options.serverName);
-    }
-
     for ( int i = 0, n = serverNames.size() > 10 ? 10 : serverNames.size(); i < n; ++i ) {
-      prefs.putString(String.format("Server%d", i), serverNames.get(i));
+      prefs.putString(String.format("server%d", i), serverNames.get(i));
     }
-   
+
+    
+    prefs.putString("format", options.sopt.format = streamFormats[streamFormatsSpinner.getSelectedItemPosition()]);    
+    prefs.putString("VideoCodec", options.sopt.vCodecName = videoCodecNames[videoCodecSpinner.getSelectedItemPosition()]);
+    prefs.putString("AudioCodec", options.sopt.aCodecName = audioCodecNames[audioCodecSpinner.getSelectedItemPosition()]);
+    
+    
+    if (videoQualitySpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("VideoQuality", options.sopt.vQuality = str2num(videoQualitySpinner.getSelectedItemText()));
+    }
+
+    if (audioQualitySpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("AudioQuality", options.sopt.aQuality = str2num(audioQualitySpinner.getSelectedItemText()));
+    }
+
+    if (videoBitrateSpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("VideoBitrate", options.sopt.vBitRate = str2num(videoBitrateSpinner.getSelectedItemText()));
+    }
+
+    if (audioBitrateSpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("AudioBitrate", options.sopt.aBitRate = str2num(audioBitrateSpinner.getSelectedItemText()));
+    }
+    
+    if (videoGopSizeSpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("GopSize", options.sopt.vGopSize = str2num(videoGopSizeSpinner.getSelectedItemText()));
+    }
+
+    if (videoBufsSpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("videoBufs", options.sopt.vBufferSize = str2num(videoBufsSpinner.getSelectedItemText()));
+    }
+
+    if (audioBufsSpinner.getVisibility() == View.VISIBLE) {
+      prefs.putInt("audioBufs", options.sopt.aBufferSize = str2num(audioBufsSpinner.getSelectedItemText()));
+    }
+    
+    if ( expertModeCheckBox.isChecked() ) {
+      prefs.putString("ffopts", options.sopt.ffopts = ffOptsBackup = ffoptsEditBox.getText().toString());
+    }
+    else {
+      options.sopt.ffopts = null;
+    }
+    
     prefs.commit();    
   }
   
@@ -416,55 +536,126 @@ public class SettingsActivity extends Activity {
   
   
   
-  
-  private void updateControls()
-  {
-    if (options.cameraId >= 0) {
-      
-      int S = 640 * 480;
-      int bestIndex = 0;
-      int bestDS = Integer.MAX_VALUE;
-      
-      List<Camera.Size> supportedFrameSizes = cameraParameters[options.cameraId].getSupportedPreviewSizes();
-      String[] frameSizeStrings = new String[supportedFrameSizes.size()];
-      for (int i = 0, n = supportedFrameSizes.size(); i < n; ++i) {
-        Camera.Size size = supportedFrameSizes.get(i);
-        frameSizeStrings[i] = String.format("%dx%d", size.width, size.height);
-
-        int s = size.width * size.height;
-        int ds = Math.abs(s-S); 
-        if ( ds < bestDS ) {
-          bestDS = ds;
-          bestIndex = i;
-        }
+  private static final int guessIndexOf(final String item, final String[] items) {
+    for (int i = 0; i < items.length; ++i) {
+      if (item.equals(items[i])) {
+        return i;
       }
-      
-      frameSizesSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, frameSizeStrings));
-      
-      if ( selectedFrameSizeIndexes[options.cameraId] == -1 ) {
-        selectedFrameSizeIndexes[options.cameraId] = bestIndex;
-      }      
-      
-      frameSizesSpinner.setSelection(selectedFrameSizeIndexes[options.cameraId]);      
     }
-    
-    serverNameCombo.setItems(serverNames);
-    serverNameCombo.setText(options.serverName);
+    return 0;
+  }
+  
+  private static final int guessIndexOf(int item, final int[] items) {
+    for (int i = 0; i < items.length; ++i) {
+      if (item == items[i]) {
+        return i;
+      }
+    }
+    return 0;
+  }
 
-    streamFormatsSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, streamFormats));
-    streamFormatsSpinner.setSelection(selectedStreamFormatIndex);
+  private static final String[] mkQualityStrings(final int[] values) {
+    String[] items = new String[values.length];
+    for ( int i = 0; i < values.length; ++i  ) {
+      items[i] = String.format("%d%%", values[i]);
+    }
+    return items;
+  }
 
-    videoCodecNamesSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, videoCodecNames));
-    videoCodecNamesSpinner.setSelection(selectedVideoCodecIndex);
+  private static final String[] mkBitrateStrings(final int[] values) {
+    String[] items = new String[values.length];
+    for ( int i = 0; i < values.length; ++i  ) {
+      items[i] = String.format("%d Bits/s", values[i]);
+    }
+    return items;
+  }
+
+  private static final String[] mkGopSizeStrings(final int[] values) {
+    String[] items = new String[values.length];
+    for ( int i = 0; i < values.length; ++i  ) {
+      items[i] = String.format("%d", values[i]);
+    }
+    return items;
+  }
+  
+  private void updateControls() {
+
+    CameraPreview.CodecOpts copts;
     
-    videoQualitySpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, videoQualityValues));
-    videoQualitySpinner.setSelection(selectedVideoQualityIndex);
+    frameSizesSpinner.setItems(supportedFrameSizeStrings[options.cameraId]);
+    frameSizesSpinner.setSelection(selectedFrameSizeIndexes[options.cameraId]);
     
-    videoGopSizeSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, videoGopSizes));
-    videoGopSizeSpinner.setSelection(selectedVideoGopSizeIndex);
+
+    copts = CameraPreview.getSupportedCodecOptions(options.sopt.vCodecName);
     
-    videoBitrateSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, videoBitrateValues));
-    videoBitrateSpinner.setSelection(selectedVideoBitrateIndex);
+    if (copts == null || copts.QualityValues == null) {
+      videoQualitySpinner.setVisibility(View.GONE);
+    } 
+    else {
+      videoQualitySpinner.setVisibility(View.VISIBLE);
+      videoQualitySpinner.setItems(mkQualityStrings(copts.QualityValues));
+      videoQualitySpinner.setSelection(guessIndexOf(options.sopt.vQuality, copts.QualityValues));
+    }    
+    
+    if (copts == null || copts.BitRates == null) {
+      videoBitrateSpinner.setVisibility(View.GONE);
+    } 
+    else {
+      videoBitrateSpinner.setVisibility(View.VISIBLE);
+      videoBitrateSpinner.setItems(mkBitrateStrings(copts.BitRates));
+      videoBitrateSpinner.setSelection(guessIndexOf(options.sopt.vBitRate, copts.BitRates));
+    }    
+    
+    if (copts == null || copts.GopSizes == null) {
+      videoGopSizeSpinner.setVisibility(View.GONE);
+    } 
+    else {
+      videoGopSizeSpinner.setVisibility(View.VISIBLE);
+      videoGopSizeSpinner.setItems(mkGopSizeStrings(copts.GopSizes));
+      videoGopSizeSpinner.setSelection(guessIndexOf(options.sopt.vGopSize, copts.GopSizes));
+    }    
+    
+    
+    if (options.sopt.vCodecName == null || options.sopt.vCodecName.isEmpty()
+        || options.sopt.vCodecName.equals("none")) {
+      videoBufsSpinner.setVisibility(View.GONE);
+    }
+    else {
+      videoBufsSpinner.setVisibility(View.VISIBLE);
+    }
+
+    
+    copts = CameraPreview.getSupportedCodecOptions(options.sopt.aCodecName);
+    
+    if (copts == null || copts.QualityValues == null) {
+      audioQualitySpinner.setVisibility(View.GONE);
+    } 
+    else {
+      audioQualitySpinner.setVisibility(View.VISIBLE);
+      audioQualitySpinner.setItems(mkQualityStrings(copts.QualityValues));
+      audioQualitySpinner.setSelection(guessIndexOf(options.sopt.aQuality, copts.QualityValues));
+    }    
+    
+    if (copts == null || copts.BitRates == null) {
+      audioBitrateSpinner.setVisibility(View.GONE);
+    } 
+    else {
+      audioBitrateSpinner.setVisibility(View.VISIBLE);
+      audioBitrateSpinner.setItems(mkBitrateStrings(copts.BitRates));
+      audioBitrateSpinner.setSelection(guessIndexOf(options.sopt.aBitRate, copts.BitRates));
+    }    
+    
+    if ( expertModeCheckBox.isChecked()) {
+      ffoptsEditBox.setText(options.sopt.ffopts);
+    }
+
+    if (options.sopt.aCodecName == null || options.sopt.aCodecName.isEmpty()
+        || options.sopt.aCodecName.equals("none")) {
+      audioBufsSpinner.setVisibility(View.GONE);
+    }
+    else {
+      audioBufsSpinner.setVisibility(View.VISIBLE);
+    }
     
   }
 
