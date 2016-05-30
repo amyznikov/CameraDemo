@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+
+  <property environment="env" />
+  <property name="specialis.dir" value="${env.ANDROID_NDK}/special-is"/>
+  <property name="source.dir" value="src;${specialis.dir}/lib/ffplay/ffplay"/>
+
+  <target name="-pre-build">
+    <copy todir="${jar.libs.dir}/armeabi-v7a">
+     <fileset dir="${specialis.dir}/lib/ffplay/armeabi-v7a" includes="*.so" />
+    </copy>
+  </target>
+</project>
